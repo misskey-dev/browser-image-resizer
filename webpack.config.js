@@ -9,6 +9,7 @@ module.exports = {
     libraryTarget: 'umd',
     umdNamedDefine: true
   },
+  devtool: process.env.NODE_ENV === 'test' ? 'eval-source-map' : false,
   module: {
     rules: [
       {

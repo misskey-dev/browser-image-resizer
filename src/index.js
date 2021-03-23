@@ -18,6 +18,10 @@ export function readAndCompressImage(file, userConfig) {
     let reader = new FileReader();
     let config = Object.assign({}, DEFAULT_CONFIG, userConfig);
 
+    img.onerror = function() {
+      reject("cannot load image.");
+    }
+
     reader.onload = function(e) {
       img.src = e.target.result;
       img.onload = function() {
@@ -58,6 +62,9 @@ export function readAndCompressImage(file, userConfig) {
     };
 
     try {
+      reader.onerror = () => {
+        reject("cannot read image file.");
+      }
       reader.readAsDataURL(file);
     } catch (err) {
       reject(err)

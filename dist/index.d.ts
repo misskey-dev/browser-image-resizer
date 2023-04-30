@@ -1,4 +1,4 @@
-export declare type BrowserImageResizerConfig = {
+export type BrowserImageResizerConfig = {
     quality: number;
     maxWidth: number;
     maxHeight: number;
@@ -6,6 +6,5 @@ export declare type BrowserImageResizerConfig = {
     scaleRatio?: number;
     debug: boolean;
     mimeType: string;
-    onScale?: (imageData: string) => void;
 };
-export declare function readAndCompressImage(file: Blob, userConfig: Partial<BrowserImageResizerConfig>): Promise<Blob>;
+export declare function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<BrowserImageResizerConfig>): Promise<Blob>;

@@ -3,9 +3,10 @@
     "composite": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "types": [
-      "node"
+    "lib": [
+      "ESNext",
+      "WebWorker"
     ]
   },
-  "include": ["vite.config.ts"]
+  "include": ["src/workers/**/*.ts"]
 }

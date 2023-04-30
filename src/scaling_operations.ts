@@ -1,8 +1,6 @@
-import { dataURIToBlob } from './data_operations';
-import { initializeOrGetCanvas } from './browser_operations';
 import { BrowserImageResizerConfig } from '.';
 
-function findMaxWidth(config: BrowserImageResizerConfig, canvas) {
+function findMaxWidth(config: BrowserImageResizerConfig, canvas: HTMLCanvasElement | OffscreenCanvas) {
   //Let's find the max available width for scaled image
   let ratio = canvas.width / canvas.height;
   let mWidth = Math.min(
@@ -46,40 +44,35 @@ function findMaxWidth(config: BrowserImageResizerConfig, canvas) {
   return mWidth;
 }
 
-function scaleCanvasWithAlgorithm(canvas: HTMLCanvasElement, config: BrowserImageResizerConfig & { outputWidth: number }) {
-  let scaledCanvas = document.createElement('canvas');
+function scaleCanvasWithAlgorithm(canvas: HTMLCanvasElement | OffscreenCanvas, config: BrowserImageResizerConfig & { outputWidth: number }) {
+  const scale = config.outputWidth / canvas.width;
 
-  let scale = config.outputWidth / canvas.width;
-
-  scaledCanvas.width = canvas.width * scale;
-  scaledCanvas.height = canvas.height * scale;
+  const scaled = new OffscreenCanvas(canvas.width * scale, canvas.height * scale);
 
   let srcImgData = canvas
     ?.getContext('2d')
     ?.getImageData(0, 0, canvas.width, canvas.height);
-  let destImgData = scaledCanvas
+  let destImgData = scaled
     ?.getContext('2d')
-    ?.createImageData(scaledCanvas.width, scaledCanvas.height);
+    ?.createImageData(scaled.width, scaled.height);
 
   if (!srcImgData || !destImgData) throw Error('Canvas is empty (scaleCanvasWithAlgorithm). You should run this script after the document is ready.');
 
   applyBilinearInterpolation(srcImgData, destImgData, scale);
 
-  scaledCanvas?.getContext('2d')?.putImageData(destImgData, 0, 0);
+  scaled?.getContext('2d')?.putImageData(destImgData, 0, 0);
 
-  return scaledCanvas;
+  return scaled;
 }
 
-function getHalfScaleCanvas(canvas) {
-  let halfCanvas = document.createElement('canvas');
-  halfCanvas.width = canvas.width / 2;
-  halfCanvas.height = canvas.height / 2;
+function getHalfScaleCanvas(src: OffscreenCanvas | HTMLCanvasElement) {
+  const half = new OffscreenCanvas(src.width / 2, src.height / 2);
 
-  halfCanvas
+  half
     ?.getContext('2d')
-    ?.drawImage(canvas, 0, 0, halfCanvas.width, halfCanvas.height);
+    ?.drawImage(src, 0, 0, half.width, half.height);
 
-  return halfCanvas;
+  return half;
 }
 
 function applyBilinearInterpolation(srcCanvasData: ImageData, destCanvasData: ImageData, scale: number) {
@@ -162,33 +155,43 @@ function applyBilinearInterpolation(srcCanvasData: ImageData, destCanvasData: Im
   }
 }
 
-export function scaleImage({ img, config }: {
-  img: HTMLImageElement;
+export async function scaleImage({ img, config }: {
+  img: ImageBitmapSource | OffscreenCanvas;
   config: BrowserImageResizerConfig;
 }) {
-  let canvas = initializeOrGetCanvas()
-  canvas.width = img.width;
-  canvas.height = img.height;
-  let ctx = canvas?.getContext('2d');
+  if (config.debug) {
+    console.log('Scale: Started', img);
+  }
+  let converting: OffscreenCanvas;
 
-  if (!ctx) throw Error('Canvas is empty (scaleImage). You should run this script after the document is ready.');
-
-  ctx.drawImage(img, 0, 0);
-
-  let maxWidth = findMaxWidth(config, canvas);
-
-  while (canvas.width >= 2 * maxWidth) {
-    canvas = getHalfScaleCanvas(canvas);
+  if (img instanceof OffscreenCanvas) {
+    converting = img;
+  } else {
+    const bmp = await createImageBitmap(img);
+    converting = new OffscreenCanvas(bmp.width, bmp.height);
+    converting.getContext('2d')?.drawImage(bmp, 0, 0);
   }
 
-  if (canvas.width > maxWidth) {
-    canvas = scaleCanvasWithAlgorithm(
-      canvas,
+  let ctx = converting?.getContext('2d');
+
+  if (!ctx) throw Error('Canvas Context is empty.');
+
+  let maxWidth = findMaxWidth(config, converting);
+  if (config.debug) console.log(`Scale: Max width is ${maxWidth}`);
+
+  while (converting.width >= 2 * maxWidth) {
+    if (config.debug) console.log(`Scale: Scaling canvas by half from ${converting.width}`);
+    converting = getHalfScaleCanvas(converting);
+  }
+
+  if (converting.width > maxWidth) {
+    if (config.debug) console.log(`Scale: Scaling canvas from ${converting.width} to ${maxWidth}`);
+    converting = scaleCanvasWithAlgorithm(
+      converting,
       Object.assign(config, { outputWidth: maxWidth })
     );
   }
 
-  let imageData = canvas.toDataURL(config.mimeType, config.quality);
-  if (typeof config.onScale === 'function') config.onScale(imageData);
-  return dataURIToBlob(imageData);
+  let imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
+  return imageData;
 }

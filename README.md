@@ -2,7 +2,13 @@
 
 ## Introduction
 
-This library allows for cross-browser image downscaling and resizing utilizing `<canvas>`. Note that this is browser-only utility and will not work in Node.js.
+This library allows for cross-browser image downscaling and resizing utilizing `OffscreenCanvas`. 
+
+## Note
+
+- This is browser-only utility and will not work in Node.js.
+- Safari 16.4 or later is required due to the use of `OffscreenCanvas`.  
+  https://caniuse.com/offscreencanvas
 
 <!--
 ## Demo
@@ -13,58 +19,17 @@ This library allows for cross-browser image downscaling and resizing utilizing `
 
 ## Installation
 
-### NPM/Yarn
+### NPM/Yarn/pnpm
 
 - `npm install git+https://github.com/misskey-dev/browser-image-resizer`
 - `yarn add git+https://github.com/misskey-dev/browser-image-resizer`
-
-<!--
-### Browser
-
-```
-<script src="https://cdn.jsdelivr.net/gh/misskey-dev/browser-image-resizer@2.2.1-misskey.3/dist/index.js"></script>
-```
--->
+- `pnpm add git+https://github.com/misskey-dev/browser-image-resizer`
 
 ## Usage
 
-### NPM/Yarn
+### In the main thread
 
-#### Promises
-
-```javascript
-import { readAndCompressImage } from 'browser-image-resizer';
-
-const config = {
-  quality: 0.5,
-  maxWidth: 800,
-  maxHeight: 600,
-  debug: true
-};
-
-// Note: A single file comes from event.target.files on <input>
-readAndCompressImage(file, config)
-  .then(resizedImage => {
-    // Upload file to some Web API
-    const url = `http://localhost:3001/upload`;
-    const formData = new FormData();
-    formData.append('images', resizedImage);
-    const options = {
-      method: 'POST',
-      body: formData
-    };
-
-    return fetch(url, options);
-  })
-  .then(result => {
-    // TODO: Handle the result
-    console.log(result);
-  });
-```
-
-#### Async/Await
-
-```javascript
+```typescript
 import { readAndCompressImage } from 'browser-image-resizer';
 
 const config = {
@@ -97,80 +62,45 @@ async function uploadImage(file) {
   }
 }
 ```
-<!--
-### Browser
 
-#### Promises
+### In worker
+Even large images can be processed in a separate thread using a worker.
 
-```javascript
-const config = {
-  quality: 0.5,
-  maxWidth: 800,
-  maxHeight: 600,
-  debug: true
-};
+#### worker.js
 
-// Note: A single file comes from event.target.files on <input>
-BrowserImageResizer.readAndCompressImage(file, config)
-  .then(resizedImage => {
-    // Upload file to some Web API
-    const url = `http://localhost:3001/upload`;
-    const formData = new FormData();
-    formData.append('images', resizedImage);
-    const options = {
-      method: 'POST',
-      body: formData
-    };
+```typescript
+import { readAndCompressImage } from "browser-image-resizer";
 
-    return fetch(url, options);
-  })
-  .then(result => {
-    // TODO: Handle the result
-    console.log(result);
-  });
-```
-
-#### Async/Await
-
-```javascript
-
-const config = {
-  quality: 0.7,
-  width: 800,
-  height: 600
-};
-
-// Note: A single file comes from event.target.files on <input>
-async function uploadImage(file) {
-  try {
-    let resizedImage = await BrowserImageResizer.readAndCompressImage(file, config);
-
-    const url = `http://localhost:3001/upload`;
-    const formData = new FormData();
-    formData.append('images', resizedImage);
-    const options = {
-      method: 'POST',
-      body: formData
-    };
-
-    let result = await fetch(url, options);
-
-    // TODO: Handle the result
-    console.log(result);
-    return result;
-  } catch (error) {
-    console.error(error);
-    throw(error);
-  }
+onmessage = async (e) => {
+    const converted = await readAndCompressImage(e.data, { maxWidth: 300 });
+    postMessage(converted, [converted]);
 }
 ```
--->
 
-### readAndCompressImage(file, config) => Promise<Blob>
+#### Main Thread
+
+```typescript
+const worker = new Worker('worker.js');
+
+const img = document.getElementById('viewer_img');
+worker.onmessage = (event) => {
+  img.src = URL.createObjectURL(event.data);
+};
+
+async function convert(file: File) {
+  const bmp = await createImageBitmap(file);
+  worker.postMessage(bmp, [bmp]);
+}
+```
+
+## API
+
+### `readAndCompressImage(file, config) => Promise<Blob>`
 
 #### Inputs
 
-* `file`: A File object, usually from an `<input>`
+* `file`: An image source that createImageBitmap can read.   
+  See https://developer.mozilla.org/en-US/docs/Web/API/createImageBitmap
 * `config`: See below
 
 | Property Name        | Purpose           | Default Value  |
@@ -186,7 +116,8 @@ async function uploadImage(file) {
 A Promise that yields an Image Blob
 
 ### Output Image Specification
-The output image is derived from `canvas.toDataURL`.
+The output image is derived from `OffscreenCanvas.convertToBlob`.  
+https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob
 
 - EXIF and other metadata will be erased.
 - Rotation will be automatically corrected.
@@ -194,4 +125,4 @@ The output image is derived from `canvas.toDataURL`.
   * See https://github.com/w3c/csswg-drafts/issues/4666#issuecomment-610962845
   * Firefox support seems to be available from version 78. [by mei23](https://github.com/misskey-dev/misskey/pull/8216#issuecomment-1041382112)
 - Color profile is srgb. Firefox 97 does not attach the ICC profile, but Chrome does.
-- You can specify image/webp as the mimeType, but [Safari will ignore `quality` (treated as 1)](https://developer.apple.com/documentation/webkitjs/htmlcanvaselement/1630000-todataurl).
+- You can specify image/webp as the mimeType but [Safari does not support.](https://developer.apple.com/documentation/webkitjs/htmlcanvaselement/1630000-todataurl).

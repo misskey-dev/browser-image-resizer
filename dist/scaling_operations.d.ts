@@ -1,5 +1,5 @@
 import { BrowserImageResizerConfig } from '.';
 export declare function scaleImage({ img, config }: {
-    img: HTMLImageElement;
+    img: ImageBitmapSource | OffscreenCanvas;
     config: BrowserImageResizerConfig;
-}): Blob;
+}): Promise<Blob>;

@@ -1,35 +1,44 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { readAndCompressImage } from "browser-image-resizer";
+import TheWorker from './workers/worker?worker';
 
-const images = ref([]);
+const images = ref<string[]>([]);
+const input = ref<HTMLInputElement>();
 
-async function onChange(event) {
-  let convertImages = Array.from(event.target.files)
-    .map(file => readImageAndConvertToBase64(file))
-  images.value = await Promise.all(convertImages)
+const worker = new TheWorker();
+console.log(worker);
+
+worker.onmessage = (event) => {
+  images.value.push(URL.createObjectURL(event.data));
+};
+worker.onerror = e => console.error(e);
+
+async function onChange() {
+  images.value.map(url => URL.revokeObjectURL(url));
+  images.value = [];
+  if (!input.value || !input.value.files) return;
+
+  const files = Array.from(input.value.files);
+  console.log(files);
+
+  files.map(file => readImageAndConvertToBase64(file).then(url => images.value.push(url)));
+  files.map(async file => {
+    const bmp = await createImageBitmap(file);
+    worker.postMessage(bmp, [bmp]);
+  });
 }
 
-async function readImageAndConvertToBase64(file) {
+async function readImageAndConvertToBase64(file: File) {
   let image = await readAndCompressImage(file, { debug: true });
-  let base64Image = await convertToBase64(image);
-  return base64Image
-}
-
-function convertToBase64(imageBlob) {
-  return new Promise((resolve) => {
-    var reader = new FileReader()
-    reader.onload = function() {
-      resolve(reader.result)
-    }
-    reader.readAsDataURL(imageBlob)
-  })
+  return URL.createObjectURL(image);
 }
 </script>
 
 <template>
   <div id="app">
-    <input type="file" accept="image/*" @change="onChange" multiple />
+    <img src="_/logo.png">
+    <input type="file" ref="input" accept="image/*" @change="onChange" multiple />
     <div v-if="images.length > 0">
       <img v-for="(image, index) in images" :key="`img_${index}`" :src="image" alt="compressed-image-output" />
     </div>

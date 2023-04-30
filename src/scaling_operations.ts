@@ -2,7 +2,7 @@ import { BrowserImageResizerConfig } from '.';
 
 function findMaxWidth(config: BrowserImageResizerConfig, canvas: HTMLCanvasElement | OffscreenCanvas) {
   //Let's find the max available width for scaled image
-  let ratio = canvas.width / canvas.height;
+  const ratio = canvas.width / canvas.height;
   let mWidth = Math.min(
     canvas.width,
     config.maxWidth,
@@ -49,10 +49,10 @@ function scaleCanvasWithAlgorithm(canvas: HTMLCanvasElement | OffscreenCanvas, c
 
   const scaled = new OffscreenCanvas(canvas.width * scale, canvas.height * scale);
 
-  let srcImgData = canvas
+  const srcImgData = canvas
     ?.getContext('2d')
     ?.getImageData(0, 0, canvas.width, canvas.height);
-  let destImgData = scaled
+  const destImgData = scaled
     ?.getContext('2d')
     ?.createImageData(scaled.width, scaled.height);
 
@@ -172,13 +172,10 @@ export async function scaleImage({ img, config }: {
     converting.getContext('2d')?.drawImage(bmp, 0, 0);
   }
 
-  let ctx = converting?.getContext('2d');
+  if (!converting?.getContext('2d')) throw Error('Canvas Context is empty.');
 
-  if (!ctx) throw Error('Canvas Context is empty.');
-
-  let maxWidth = findMaxWidth(config, converting);
+  const maxWidth = findMaxWidth(config, converting);
   if (config.debug) console.log(`Scale: Max width is ${maxWidth}`);
-
   while (converting.width >= 2 * maxWidth) {
     if (config.debug) console.log(`Scale: Scaling canvas by half from ${converting.width}`);
     converting = getHalfScaleCanvas(converting);
@@ -192,6 +189,6 @@ export async function scaleImage({ img, config }: {
     );
   }
 
-  let imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
+  const imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
   return imageData;
 }

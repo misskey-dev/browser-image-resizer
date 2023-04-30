@@ -1,1 +1,162 @@
-function E(e,t){let i=t.width/t.height,r=Math.min(t.width,e.maxWidth,i*e.maxHeight);return e.maxSize&&e.maxSize>0&&e.maxSize<t.width*t.height/1e3&&(r=Math.min(r,Math.floor(e.maxSize*1e3/t.height))),e.scaleRatio&&(r=Math.min(r,Math.floor(e.scaleRatio*t.width))),e.debug&&(console.log("browser-image-resizer: original image size = "+t.width+" px (width) X "+t.height+" px (height)"),console.log("browser-image-resizer: scaled image size = "+r+" px (width) X "+Math.floor(r/i)+" px (height)")),r<=0&&(r=1,console.warn("browser-image-resizer: image size is too small")),r}function j(e,t){var o,h,d;let i=t.outputWidth/e.width,r=new OffscreenCanvas(e.width*i,e.height*i),m=(o=e==null?void 0:e.getContext("2d"))==null?void 0:o.getImageData(0,0,e.width,e.height),n=(h=r==null?void 0:r.getContext("2d"))==null?void 0:h.createImageData(r.width,r.height);if(!m||!n)throw Error("Canvas is empty (scaleCanvasWithAlgorithm). You should run this script after the document is ready.");return A(m,n,i),(d=r==null?void 0:r.getContext("2d"))==null||d.putImageData(n,0,0),r}function q(e){var i;let t=new OffscreenCanvas(e.width/2,e.height/2);return(i=t==null?void 0:t.getContext("2d"))==null||i.drawImage(e,0,0,t.width,t.height),t}function A(e,t,i){function r(T,c,H,C,s,y){let O=1-s,R=1-y;return T*O*R+c*s*R+H*O*y+C*s*y}let m,n,o,h,d,g,p,I,l,u,a,f,b,w,x,z,S,M,B;for(m=0;m<t.height;++m)for(o=m/i,h=Math.floor(o),d=Math.ceil(o)>e.height-1?e.height-1:Math.ceil(o),n=0;n<t.width;++n)g=n/i,p=Math.floor(g),I=Math.ceil(g)>e.width-1?e.width-1:Math.ceil(g),l=(n+t.width*m)*4,u=(p+e.width*h)*4,a=(I+e.width*h)*4,f=(p+e.width*d)*4,b=(I+e.width*d)*4,w=g-p,x=o-h,z=r(e.data[u],e.data[a],e.data[f],e.data[b],w,x),t.data[l]=z,S=r(e.data[u+1],e.data[a+1],e.data[f+1],e.data[b+1],w,x),t.data[l+1]=S,M=r(e.data[u+2],e.data[a+2],e.data[f+2],e.data[b+2],w,x),t.data[l+2]=M,B=r(e.data[u+3],e.data[a+3],e.data[f+3],e.data[b+3],w,x),t.data[l+3]=B}async function W({img:e,config:t}){var o;t.debug&&console.log("Scale: Started",e);let i;if(e instanceof OffscreenCanvas)i=e;else{let h=await createImageBitmap(e);i=new OffscreenCanvas(h.width,h.height),(o=i.getContext("2d"))==null||o.drawImage(h,0,0)}if(!(i==null?void 0:i.getContext("2d")))throw Error("Canvas Context is empty.");let m=E(t,i);for(t.debug&&console.log(`Scale: Max width is ${m}`);i.width>=2*m;)t.debug&&console.log(`Scale: Scaling canvas by half from ${i.width}`),i=q(i);return i.width>m&&(t.debug&&console.log(`Scale: Scaling canvas from ${i.width} to ${m}`),i=j(i,Object.assign(t,{outputWidth:m}))),await i.convertToBlob({type:t.mimeType,quality:t.quality})}var L={quality:.5,maxWidth:800,maxHeight:600,debug:!1,mimeType:"image/jpeg"};async function F(e,t){let i=Object.assign({},L,t);return W({img:e,config:i})}export{F as readAndCompressImage};
+// src/scaling_operations.ts
+function findMaxWidth(config, canvas) {
+  const ratio = canvas.width / canvas.height;
+  let mWidth = Math.min(
+    canvas.width,
+    config.maxWidth,
+    ratio * config.maxHeight
+  );
+  if (config.maxSize && config.maxSize > 0 && config.maxSize < canvas.width * canvas.height / 1e3)
+    mWidth = Math.min(
+      mWidth,
+      Math.floor(config.maxSize * 1e3 / canvas.height)
+    );
+  if (!!config.scaleRatio)
+    mWidth = Math.min(mWidth, Math.floor(config.scaleRatio * canvas.width));
+  if (config.debug) {
+    console.log(
+      "browser-image-resizer: original image size = " + canvas.width + " px (width) X " + canvas.height + " px (height)"
+    );
+    console.log(
+      "browser-image-resizer: scaled image size = " + mWidth + " px (width) X " + Math.floor(mWidth / ratio) + " px (height)"
+    );
+  }
+  if (mWidth <= 0) {
+    mWidth = 1;
+    console.warn("browser-image-resizer: image size is too small");
+  }
+  return mWidth;
+}
+function scaleCanvasWithAlgorithm(canvas, config) {
+  var _a, _b, _c;
+  const scale = config.outputWidth / canvas.width;
+  const scaled = new OffscreenCanvas(canvas.width * scale, canvas.height * scale);
+  const srcImgData = (_a = canvas == null ? void 0 : canvas.getContext("2d")) == null ? void 0 : _a.getImageData(0, 0, canvas.width, canvas.height);
+  const destImgData = (_b = scaled == null ? void 0 : scaled.getContext("2d")) == null ? void 0 : _b.createImageData(scaled.width, scaled.height);
+  if (!srcImgData || !destImgData)
+    throw Error("Canvas is empty (scaleCanvasWithAlgorithm). You should run this script after the document is ready.");
+  applyBilinearInterpolation(srcImgData, destImgData, scale);
+  (_c = scaled == null ? void 0 : scaled.getContext("2d")) == null ? void 0 : _c.putImageData(destImgData, 0, 0);
+  return scaled;
+}
+function getHalfScaleCanvas(src) {
+  var _a;
+  const half = new OffscreenCanvas(src.width / 2, src.height / 2);
+  (_a = half == null ? void 0 : half.getContext("2d")) == null ? void 0 : _a.drawImage(src, 0, 0, half.width, half.height);
+  return half;
+}
+function applyBilinearInterpolation(srcCanvasData, destCanvasData, scale) {
+  function inner(f00, f10, f01, f11, x, y) {
+    let un_x = 1 - x;
+    let un_y = 1 - y;
+    return f00 * un_x * un_y + f10 * x * un_y + f01 * un_x * y + f11 * x * y;
+  }
+  let i, j;
+  let iyv, iy0, iy1, ixv, ix0, ix1;
+  let idxD, idxS00, idxS10, idxS01, idxS11;
+  let dx, dy;
+  let r, g, b, a;
+  for (i = 0; i < destCanvasData.height; ++i) {
+    iyv = i / scale;
+    iy0 = Math.floor(iyv);
+    iy1 = Math.ceil(iyv) > srcCanvasData.height - 1 ? srcCanvasData.height - 1 : Math.ceil(iyv);
+    for (j = 0; j < destCanvasData.width; ++j) {
+      ixv = j / scale;
+      ix0 = Math.floor(ixv);
+      ix1 = Math.ceil(ixv) > srcCanvasData.width - 1 ? srcCanvasData.width - 1 : Math.ceil(ixv);
+      idxD = (j + destCanvasData.width * i) * 4;
+      idxS00 = (ix0 + srcCanvasData.width * iy0) * 4;
+      idxS10 = (ix1 + srcCanvasData.width * iy0) * 4;
+      idxS01 = (ix0 + srcCanvasData.width * iy1) * 4;
+      idxS11 = (ix1 + srcCanvasData.width * iy1) * 4;
+      dx = ixv - ix0;
+      dy = iyv - iy0;
+      r = inner(
+        srcCanvasData.data[idxS00],
+        srcCanvasData.data[idxS10],
+        srcCanvasData.data[idxS01],
+        srcCanvasData.data[idxS11],
+        dx,
+        dy
+      );
+      destCanvasData.data[idxD] = r;
+      g = inner(
+        srcCanvasData.data[idxS00 + 1],
+        srcCanvasData.data[idxS10 + 1],
+        srcCanvasData.data[idxS01 + 1],
+        srcCanvasData.data[idxS11 + 1],
+        dx,
+        dy
+      );
+      destCanvasData.data[idxD + 1] = g;
+      b = inner(
+        srcCanvasData.data[idxS00 + 2],
+        srcCanvasData.data[idxS10 + 2],
+        srcCanvasData.data[idxS01 + 2],
+        srcCanvasData.data[idxS11 + 2],
+        dx,
+        dy
+      );
+      destCanvasData.data[idxD + 2] = b;
+      a = inner(
+        srcCanvasData.data[idxS00 + 3],
+        srcCanvasData.data[idxS10 + 3],
+        srcCanvasData.data[idxS01 + 3],
+        srcCanvasData.data[idxS11 + 3],
+        dx,
+        dy
+      );
+      destCanvasData.data[idxD + 3] = a;
+    }
+  }
+}
+async function scaleImage({ img, config }) {
+  var _a;
+  if (config.debug) {
+    console.log("Scale: Started", img);
+  }
+  let converting;
+  if (img instanceof OffscreenCanvas) {
+    converting = img;
+  } else {
+    const bmp = await createImageBitmap(img);
+    converting = new OffscreenCanvas(bmp.width, bmp.height);
+    (_a = converting.getContext("2d")) == null ? void 0 : _a.drawImage(bmp, 0, 0);
+  }
+  if (!(converting == null ? void 0 : converting.getContext("2d")))
+    throw Error("Canvas Context is empty.");
+  const maxWidth = findMaxWidth(config, converting);
+  if (config.debug)
+    console.log(`Scale: Max width is ${maxWidth}`);
+  while (converting.width >= 2 * maxWidth) {
+    if (config.debug)
+      console.log(`Scale: Scaling canvas by half from ${converting.width}`);
+    converting = getHalfScaleCanvas(converting);
+  }
+  if (converting.width > maxWidth) {
+    if (config.debug)
+      console.log(`Scale: Scaling canvas from ${converting.width} to ${maxWidth}`);
+    converting = scaleCanvasWithAlgorithm(
+      converting,
+      Object.assign(config, { outputWidth: maxWidth })
+    );
+  }
+  const imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
+  return imageData;
+}
+
+// src/index.ts
+var DEFAULT_CONFIG = {
+  quality: 0.5,
+  maxWidth: 800,
+  maxHeight: 600,
+  debug: false,
+  mimeType: "image/jpeg"
+};
+async function readAndCompressImage(img, userConfig) {
+  const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
+  return scaleImage({ img, config });
+}
+export {
+  readAndCompressImage
+};

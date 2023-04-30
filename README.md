@@ -83,8 +83,8 @@ onmessage = async (e) => {
 const worker = new Worker('worker.js');
 
 const img = document.getElementById('viewer_img');
-worker.onmessage = (event) => {
-  img.src = URL.createObjectURL(event.data);
+worker.onmessage = (e) => {
+  img.src = URL.createObjectURL(e.data);
 };
 
 async function convert(file: File) {

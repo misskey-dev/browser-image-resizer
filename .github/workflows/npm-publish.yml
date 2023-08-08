@@ -9,6 +9,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Install pnpm
@@ -24,6 +27,6 @@ jobs:
           corepack enable
           pnpm i --frozen-lockfile
           pnpm build
-          pnpm publish --access public --no-git-checks
+          pnpm publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

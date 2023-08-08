@@ -1,12 +1,12 @@
 {
   "name": "@misskey-dev/browser-image-resizer",
-  "version": "2.2.1-misskey.6",
-  "description": "A browser-based utility to downscale and resize images using <canvas>",
+  "version": "2.2.1-misskey.7",
+  "description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Eric Nograles <grales@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@8.3.1",
+  "packageManager": "pnpm@8.6.12",
   "files": [
     "dist"
   ],

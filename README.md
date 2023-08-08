@@ -21,9 +21,9 @@ This library allows for cross-browser image downscaling and resizing utilizing `
 
 ### NPM/Yarn/pnpm
 
-- `npm install git+https://github.com/misskey-dev/browser-image-resizer`
-- `yarn add git+https://github.com/misskey-dev/browser-image-resizer`
-- `pnpm add git+https://github.com/misskey-dev/browser-image-resizer`
+- `npm install @misskey-dev/browser-image-resizer`
+- `yarn add @misskey-dev/browser-image-resizer`
+- `pnpm add @misskey-dev/browser-image-resizer`
 
 ## Usage
 

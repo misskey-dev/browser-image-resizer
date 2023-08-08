@@ -1,6 +1,6 @@
 {
   "name": "@misskey-dev/browser-image-resizer",
-  "version": "2.2.1-misskey.7",
+  "version": "2.2.1-misskey.8",
   "description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "NODE_ENV=production node build.js && tsc --project tsconfig.build.json",
-    "dev": "node build.js watch"
+    "dev": "node build.js watch",
+    "test": "cd tests/vite-project && pnpm run dev"
   },
   "repository": "https://github.com/misskey-dev/browser-image-resizer.git"
 }

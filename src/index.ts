@@ -1,23 +1,46 @@
 import { scaleImage } from './scaling_operations';
 
-export type BrowserImageResizerConfig = {
-  quality: number;
+type BrowserImageResizerConfigBase = {
   maxWidth: number;
   maxHeight: number;
   maxSize?: number;     // ???
-  scaleRatio?: number;  // ???
+
+  /**
+   * Scale ratio. Strictly limited to maxWidth.
+   */
+  scaleRatio?: number;
+
+  /**
+   * Output logs to console
+   */
   debug: boolean;
+}
+
+export type BrowserImageResizerConfigWithConvertedOutput = BrowserImageResizerConfigBase & {
+  quality: number;
   mimeType: string;
 };
 
-const DEFAULT_CONFIG: BrowserImageResizerConfig = {
+export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageResizerConfigBase & {
+  mimeType: null;
+}
+
+export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
+
+const DEFAULT_CONFIG = {
   quality: 0.5,
   maxWidth: 800,
   maxHeight: 600,
   debug: false,
   mimeType: 'image/jpeg',
-};
-export async function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<BrowserImageResizerConfig>) {
-  const config: BrowserImageResizerConfig = Object.assign({}, DEFAULT_CONFIG, userConfig);
+} as const;
+
+export async function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<BrowserImageResizerConfigWithConvertedOutput>): Promise<Blob>
+export async function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<Omit<BrowserImageResizerConfigWithOffscreenCanvasOutput, 'quality'>>): Promise<OffscreenCanvas>
+export async function readAndCompressImage(
+  img: ImageBitmapSource | OffscreenCanvas,
+  userConfig: Partial<BrowserImageResizerConfig>
+) {
+  const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
   return scaleImage({ img, config });
 }

@@ -44,15 +44,13 @@ function findMaxWidth(config: BrowserImageResizerConfig, canvas: HTMLCanvasEleme
   return mWidth;
 }
 
-function scaleCanvasWithAlgorithm(canvas: HTMLCanvasElement | OffscreenCanvas, config: BrowserImageResizerConfig & { outputWidth: number }) {
+function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: BrowserImageResizerConfig & { outputWidth: number }) {
   const scale = config.outputWidth / canvas.width;
 
   const scaled = new OffscreenCanvas(canvas.width * scale, canvas.height * scale);
 
   const srcImgData = canvas
     ?.getContext('2d')
-    // @ts-ignore
-    // (error TS2339: Property 'getImageData' does not exist on type 'RenderingContext | OffscreenCanvasRenderingContext2D'. Property 'getImageData' does not exist on type 'ImageBitmapRenderingContext'.)
     ?.getImageData(0, 0, canvas.width, canvas.height);
   const destImgData = scaled
     ?.getContext('2d')
@@ -187,10 +185,13 @@ export async function scaleImage({ img, config }: {
     if (config.debug) console.log(`Scale: Scaling canvas from ${converting.width} to ${maxWidth}`);
     converting = scaleCanvasWithAlgorithm(
       converting,
-      Object.assign(config, { outputWidth: maxWidth })
+      Object.assign(config, { outputWidth: maxWidth }),
     );
   }
 
+  if (config.mimeType === null) {
+    return converting;
+  }
   const imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
   return imageData;
 }

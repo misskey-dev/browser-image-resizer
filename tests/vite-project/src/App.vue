@@ -5,6 +5,7 @@ import TheWorker from './workers/worker?worker';
 
 const images = ref<string[]>([]);
 const input = ref<HTMLInputElement>();
+const canvas = ref<HTMLCanvasElement>();
 
 const worker = new TheWorker();
 console.log(worker);
@@ -27,6 +28,11 @@ async function onChange() {
     const bmp = await createImageBitmap(file);
     worker.postMessage(bmp, [bmp]);
   });
+
+  const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: 2048, maxHeight: 2048, mimeType: null });
+  const ctx = canvas.value?.getContext('2d');
+  if (!ctx) return;
+  ctx.drawImage(oc, 0, 0);
 }
 
 async function readImageAndConvertToBase64(file: File) {
@@ -42,6 +48,7 @@ async function readImageAndConvertToBase64(file: File) {
     <div v-if="images.length > 0">
       <img v-for="(image, index) in images" :key="`img_${index}`" :src="image" alt="compressed-image-output" />
     </div>
+    <canvas ref="canvas" width="2048" height="2048"></canvas>
   </div>
 </template>
 

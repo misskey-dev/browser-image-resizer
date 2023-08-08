@@ -138,6 +138,9 @@ async function scaleImage({ img, config }) {
       Object.assign(config, { outputWidth: maxWidth })
     );
   }
+  if (config.mimeType === null) {
+    return converting;
+  }
   const imageData = await converting.convertToBlob({ type: config.mimeType, quality: config.quality });
   return imageData;
 }

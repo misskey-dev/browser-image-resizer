@@ -1,6 +1,6 @@
 {
-  "name": "browser-image-resizer",
-  "version": "2.2.1-misskey.4",
+  "name": "@misskey-dev/browser-image-resizer",
+  "version": "2.2.1-misskey.5",
   "description": "A browser-based utility to downscale and resize images using <canvas>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

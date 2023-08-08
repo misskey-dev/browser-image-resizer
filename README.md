@@ -95,7 +95,7 @@ async function convert(file: File) {
 
 ## API
 
-### `readAndCompressImage(file, config) => Promise<Blob>`
+### `readAndCompressImage(file, config) => Promise<Blob | OffscreenCanvas>`
 
 #### Inputs
 
@@ -109,7 +109,7 @@ async function convert(file: File) {
 | `maxWidth`      | The maximum width for the downscaled image | 800 |
 | `maxHeight` | The maximum height for the downscaled image | 600 |
 | `debug` | console.log image update operations | false |
-| `mimeType` | specify image output type other than jpeg  | 'image/jpeg' |
+| `mimeType` | specify image output type other than jpeg / If set `null`, function returns OffscreenCanvas  | 'image/jpeg' |
 
 ### Outputs
 

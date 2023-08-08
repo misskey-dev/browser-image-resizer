@@ -28,21 +28,19 @@ function findMaxWidth(config, canvas) {
   return mWidth;
 }
 function scaleCanvasWithAlgorithm(canvas, config) {
-  var _a, _b, _c;
   const scale = config.outputWidth / canvas.width;
   const scaled = new OffscreenCanvas(canvas.width * scale, canvas.height * scale);
-  const srcImgData = (_a = canvas == null ? void 0 : canvas.getContext("2d")) == null ? void 0 : _a.getImageData(0, 0, canvas.width, canvas.height);
-  const destImgData = (_b = scaled == null ? void 0 : scaled.getContext("2d")) == null ? void 0 : _b.createImageData(scaled.width, scaled.height);
+  const srcImgData = canvas?.getContext("2d")?.getImageData(0, 0, canvas.width, canvas.height);
+  const destImgData = scaled?.getContext("2d")?.createImageData(scaled.width, scaled.height);
   if (!srcImgData || !destImgData)
     throw Error("Canvas is empty (scaleCanvasWithAlgorithm). You should run this script after the document is ready.");
   applyBilinearInterpolation(srcImgData, destImgData, scale);
-  (_c = scaled == null ? void 0 : scaled.getContext("2d")) == null ? void 0 : _c.putImageData(destImgData, 0, 0);
+  scaled?.getContext("2d")?.putImageData(destImgData, 0, 0);
   return scaled;
 }
 function getHalfScaleCanvas(src) {
-  var _a;
   const half = new OffscreenCanvas(src.width / 2, src.height / 2);
-  (_a = half == null ? void 0 : half.getContext("2d")) == null ? void 0 : _a.drawImage(src, 0, 0, half.width, half.height);
+  half?.getContext("2d")?.drawImage(src, 0, 0, half.width, half.height);
   return half;
 }
 function applyBilinearInterpolation(srcCanvasData, destCanvasData, scale) {
@@ -111,7 +109,6 @@ function applyBilinearInterpolation(srcCanvasData, destCanvasData, scale) {
   }
 }
 async function scaleImage({ img, config }) {
-  var _a;
   if (config.debug) {
     console.log("Scale: Started", img);
   }
@@ -121,9 +118,9 @@ async function scaleImage({ img, config }) {
   } else {
     const bmp = await createImageBitmap(img);
     converting = new OffscreenCanvas(bmp.width, bmp.height);
-    (_a = converting.getContext("2d")) == null ? void 0 : _a.drawImage(bmp, 0, 0);
+    converting.getContext("2d")?.drawImage(bmp, 0, 0);
   }
-  if (!(converting == null ? void 0 : converting.getContext("2d")))
+  if (!converting?.getContext("2d"))
     throw Error("Canvas Context is empty.");
   const maxWidth = findMaxWidth(config, converting);
   if (config.debug)

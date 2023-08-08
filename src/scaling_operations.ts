@@ -51,6 +51,8 @@ function scaleCanvasWithAlgorithm(canvas: HTMLCanvasElement | OffscreenCanvas, c
 
   const srcImgData = canvas
     ?.getContext('2d')
+    // @ts-ignore
+    // (error TS2339: Property 'getImageData' does not exist on type 'RenderingContext | OffscreenCanvasRenderingContext2D'. Property 'getImageData' does not exist on type 'ImageBitmapRenderingContext'.)
     ?.getImageData(0, 0, canvas.width, canvas.height);
   const destImgData = scaled
     ?.getContext('2d')

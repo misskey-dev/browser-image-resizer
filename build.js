@@ -7,7 +7,7 @@ const buildOptions = {
 	bundle: true,
 	format: 'esm',
 	treeShaking: true,
-	minify: process.env.NODE_ENV === 'production',
+	minify: false,
 	absWorkingDir: __dirname,
 	outbase: `${__dirname}/src`,
 	outdir: `${__dirname}/dist`,

@@ -1,12 +1,12 @@
-import { BrowserImageResizerConfig } from ".";
-import { getImageData } from "./scaling_operations";
-
 /*
  * Hermite resize - fast image resize/resample using Hermite filter.
  * https://github.com/viliusle/Hermite-resize/blob/fae53290d2b03520a6fc81d734c3028902a599c0/src/hermite.js
  * Author: ViliusL
  * License: MIT https://github.com/viliusle/Hermite-resize/blob/fae53290d2b03520a6fc81d734c3028902a599c0/MIT-LICENSE.txt
  */
+
+import { getImageData } from "./scaling_operations";
+
 type WorkerSouceData = {
     source: ImageData;
     target: boolean;
@@ -21,6 +21,7 @@ type WorkerSouceMessage = {
     destHeight: number;
     core: number;
     source: ArrayBufferLike;
+    debug?: boolean;
 }
 
 type WorkerResultMessage = {
@@ -37,11 +38,15 @@ export class Hermit {
      * contructor
      */
     constructor() {
-        this.cores = navigator.hardwareConcurrency || 4;
-        this.workerBlobURL = window.URL.createObjectURL(new Blob(['(',
+        this.cores = Math.min(navigator.hardwareConcurrency || 4, 4);
+        this.workerBlobURL = globalThis.URL.createObjectURL(new Blob(['(',
             function () {
                 //begin worker
                 onmessage = function (event: MessageEvent<WorkerSouceMessage>) {
+                    if (event.data.debug) {
+                        console.log('browser-image-resizer: hermite worker: start', event.data.core, event.data);
+                        console.time('work')
+                    }
                     const core = event.data.core;
                     const srcWidth = event.data.srcWidth;
                     const srcHeight = event.data.srcHeight;
@@ -69,7 +74,7 @@ export class Hermit {
                             let gx_g = 0;
                             let gx_b = 0;
                             let gx_a = 0;
-                            let center_y = j * ratio_h;
+                            const center_y = j * ratio_h;
 
                             const xx_start = Math.floor(i * ratio_w);
                             const xx_stop = Math.min(Math.ceil((i + 1) * ratio_w), srcWidth);
@@ -115,7 +120,11 @@ export class Hermit {
                         core,
                         target,
                     };
-                    postMessage(objData, '*', [target.buffer]);
+                    (globalThis.postMessage as any)(objData, [target.buffer]);
+                    if (event.data.debug) {
+                        console.timeEnd('work');
+                        console.log('browser-image-resizer: Worker: end', event.data.core, globalThis.performance.measure('measure', 'start', 'end'));
+                    }
                 };
                 //end worker
             }.toString(),
@@ -125,14 +134,14 @@ export class Hermit {
     /**
      * Hermite resize. Detect cpu count and use best option for user.
      */
-    public resampleAuto(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, scale: number, config: BrowserImageResizerConfig & { outputWidth: number }) {
-        if (!!window.Worker && this.cores > 1 && config.argorithm !== 'hermite_single') {
+    public resampleAuto(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: { debug?: boolean, argorithm?: string }) {
+        if (!!globalThis.Worker && this.cores > 1 && config?.argorithm !== 'hermite_single') {
             //workers supported and we have at least 2 cpu cores - using multithreading
-            return this.resample(srcCanvas, destCanvas, scale, config);
+            return this.resample(srcCanvas, destCanvas, config);
         } else {
             //1 cpu version
             const { srcImgData, destImgData } = getImageData(srcCanvas, destCanvas);
-            this.resampleSingle(srcImgData, destImgData);
+            this.resampleSingle(srcImgData, destImgData, config);
             destCanvas.getContext('2d')!.putImageData(destImgData, 0, 0);
             return;
         }
@@ -141,12 +150,11 @@ export class Hermit {
     /**
      * Hermite resize, multicore version - fast image resize/resample using Hermite filter.
      */
-    async resample(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, scale: number, config: BrowserImageResizerConfig & { outputWidth: number }) {
+    async resample(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: { debug?: boolean }) {
         return new Promise<void>((resolve, reject) => {
-            //let width_source = canvas.width;
-            //let height_source = canvas.height;
-            //width = Math.round(width);
-            //height = Math.round(height);
+            if (config.debug) console.time('hermite_multi');
+
+            const ratio_h = srcCanvas.height / destCanvas.height;
 
             //stop old workers
             if (this.workersArchive.length > 0) {
@@ -164,8 +172,9 @@ export class Hermit {
             if (!ctx) return reject('Canvas is empty (resample)');
 
             if (config.debug) {
-                console.log('source size: ', srcCanvas.width, srcCanvas.height, 'scale: ', scale);
-                console.log('target size: ', destCanvas.width, destCanvas.height);
+                console.log('browser-image-resizer: hermite_multi: ', this.cores, 'cores');
+                console.log('browser-image-resizer: source size: ', srcCanvas.width, srcCanvas.height, 'ratio_h: ', ratio_h);
+                console.log('browser-image-resizer: target size: ', destCanvas.width, destCanvas.height);
             }
 
             const data_part: WorkerSouceData[] = [];
@@ -184,13 +193,13 @@ export class Hermit {
                 const current_block_height = Math.min(block_height, srcCanvas.height - offset_y);
 
                 if (config.debug) {
-                    console.log('source split: ', '#' + c, offset_y, end_y, 'height: ' + current_block_height);
+                    console.log('browser-image-resizer: source split: ', '#' + c, offset_y, end_y, 'height: ' + current_block_height);
                 }
 
                 data_part.push({
                     source: ctx.getImageData(0, offset_y, srcCanvas.width, block_height),
                     target: true,
-                    startY: Math.ceil(offset_y * scale),
+                    startY: Math.ceil(offset_y / ratio_h),
                     height: current_block_height
                 });
             }
@@ -198,9 +207,8 @@ export class Hermit {
             //start
             const destCtx = destCanvas.getContext('2d');
             if (!destCtx) return reject('Canvas is empty (resample dest)');
-            let workers_in_use = 0;
+            let workers_in_use = data_part.length;
             for (let c = 0; c < data_part.length; c++) {
-                workers_in_use++;
                 const my_worker = new Worker(this.workerBlobURL);
                 this.workersArchive[c] = my_worker;
 
@@ -211,7 +219,7 @@ export class Hermit {
                     delete this.workersArchive[core];
 
                     //draw
-                    const height_part = Math.ceil(data_part[core].height * scale);
+                    const height_part = Math.ceil(data_part[core].height / ratio_h);
                     const target = destCtx.createImageData(destCanvas.width, height_part);
                     target.data.set(event.data.target);
                     destCtx.putImageData(target, 0, data_part[core].startY);
@@ -219,15 +227,18 @@ export class Hermit {
                     if (workers_in_use <= 0) {
                         //all workers done
                         resolve();
+                        if (config.debug) console.timeEnd('hermite_multi');
                     }
                 };
+                my_worker.onerror = err => reject(err);
                 const objData: WorkerSouceMessage = {
                     srcWidth: srcCanvas.width,
                     srcHeight: data_part[c].height,
                     destWidth: destCanvas.width,
-                    destHeight: Math.ceil(data_part[c].height * scale),
+                    destHeight: Math.ceil(data_part[c].height / ratio_h),
                     core: c,
                     source: data_part[c].source.data.buffer,
+                    debug: config.debug,
                 };
                 my_worker.postMessage(objData, [objData.source]);
             }
@@ -236,13 +247,8 @@ export class Hermit {
 
     /**
      * Hermite resize - fast image resize/resample using Hermite filter. 1 cpu version!
-     * 
-     * @param {HtmlElement} canvas
-     * @param {int} width
-     * @param {int} height
-     * @param {boolean} resize_canvas if true, canvas will be resized. Optional.
      */
-    resampleSingle(srcCanvasData: ImageData, destCanvasData: ImageData) {
+    resampleSingle(srcCanvasData: ImageData, destCanvasData: ImageData, config: { debug?: boolean }) {
         const ratio_w = srcCanvasData.width / destCanvasData.width;
         const ratio_h = srcCanvasData.height / destCanvasData.height;
         const ratio_w_half = Math.ceil(ratio_w / 2);
@@ -251,9 +257,14 @@ export class Hermit {
         const data = srcCanvasData.data;
         const data2 = destCanvasData.data;
 
+        if (config.debug) {
+            console.log('browser-image-resizer: source size: ', srcCanvasData.width, srcCanvasData.height, 'ratio_h: ', ratio_h);
+            console.log('browser-image-resizer: target size: ', destCanvasData.width, destCanvasData.height);
+            console.time('hermite_single');
+        }
         for (let j = 0; j < destCanvasData.height; j++) {
             for (let i = 0; i < destCanvasData.width; i++) {
-                let x2 = (i + j * destCanvasData.width) * 4;
+                const x2 = (i + j * destCanvasData.width) * 4;
                 let weight = 0;
                 let weights = 0;
                 let weights_alpha = 0;
@@ -261,7 +272,7 @@ export class Hermit {
                 let gx_g = 0;
                 let gx_b = 0;
                 let gx_a = 0;
-                let center_y = j * ratio_h;
+                const center_y = j * ratio_h;
 
                 const xx_start = Math.floor(i * ratio_w);
                 const xx_stop = Math.min(Math.ceil((i + 1) * ratio_w), srcCanvasData.width);
@@ -299,6 +310,9 @@ export class Hermit {
                 data2[x2 + 2] = gx_b / weights;
                 data2[x2 + 3] = gx_a / weights_alpha;
             }
+        }
+        if (config.debug) {
+            console.timeEnd('hermite_single');
         }
     };
 }

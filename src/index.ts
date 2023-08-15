@@ -1,4 +1,9 @@
+import { Hermit as _Hermite } from './hermite';
+import { bilinear as _bilinear } from './bilinear';
 import { scaleImage } from './scaling_operations';
+
+export const Hermit = _Hermite;
+export const bilinear = _bilinear;
 
 type BrowserImageResizerConfigBase = {
 	argorithm: 'bilinear' | 'hermite' | 'hermite_single';
@@ -29,7 +34,7 @@ export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageRes
 export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
 
 const DEFAULT_CONFIG = {
-	argorithm: 'hermite',
+	argorithm: 'bilinear',
 	quality: 0.5,
 	maxWidth: 800,
 	maxHeight: 600,

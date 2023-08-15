@@ -1,4 +1,9 @@
+import { Hermit as _Hermite } from './hermite';
+import { bilinear as _bilinear } from './bilinear';
+export declare const Hermit: typeof _Hermite;
+export declare const bilinear: typeof _bilinear;
 type BrowserImageResizerConfigBase = {
+    argorithm: 'bilinear' | 'hermite' | 'hermite_single';
     maxWidth: number;
     maxHeight: number;
     maxSize?: number;

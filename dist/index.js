@@ -67,6 +67,9 @@ function bilinear(srcCanvasData, destCanvasData, scale) {
 
 // src/scaling_operations.ts
 var hermite;
+function getTargetHeight(srcHeight, scale, config) {
+  return Math.min(Math.floor(srcHeight * scale), config.maxHeight);
+}
 function findMaxWidth(config, canvas) {
   const ratio = canvas.width / canvas.height;
   let mWidth = Math.min(
@@ -86,7 +89,7 @@ function findMaxWidth(config, canvas) {
       "browser-image-resizer: original image size = " + canvas.width + " px (width) X " + canvas.height + " px (height)"
     );
     console.log(
-      "browser-image-resizer: scaled image size = " + mWidth + " px (width) X " + Math.floor(mWidth / ratio) + " px (height)"
+      "browser-image-resizer: scaled image size = " + mWidth + " px (width) X " + getTargetHeight(canvas.height, mWidth / canvas.width, config) + " px (height)"
     );
   }
   if (mWidth <= 0) {
@@ -108,7 +111,7 @@ function prepareHermit() {
 }
 async function scaleCanvasWithAlgorithm(canvas, config) {
   const scale = config.outputWidth / canvas.width;
-  const scaled = new OffscreenCanvas(config.outputWidth, Math.min(Math.floor(canvas.height * scale), config.maxHeight));
+  const scaled = new OffscreenCanvas(config.outputWidth, getTargetHeight(canvas.height, scale, config));
   switch (config.argorithm) {
     case "hermite": {
       prepareHermit();
@@ -258,7 +261,7 @@ var Hermit = class {
           globalThis.postMessage(objData, [target.buffer]);
           if (event.data.debug) {
             console.timeEnd("work");
-            console.log("browser-image-resizer: Worker: end", event.data.core, globalThis.performance.measure("measure", "start", "end"));
+            console.log("browser-image-resizer: Worker: end", event.data.core);
           }
         };
       }.toString(),
@@ -318,7 +321,6 @@ var Hermit = class {
         }
         data_part.push({
           source: ctx.getImageData(0, offset_y, srcCanvas.width, block_height),
-          target: true,
           startY: Math.ceil(offset_y / ratio_h),
           height: current_block_height
         });
@@ -333,8 +335,6 @@ var Hermit = class {
         my_worker.onmessage = (event) => {
           workers_in_use--;
           const core = event.data.core;
-          this.workersArchive[core].terminate();
-          delete this.workersArchive[core];
           const height_part = Math.ceil(data_part[core].height / ratio_h);
           const target = destCtx.createImageData(destCanvas.width, height_part);
           target.data.set(event.data.target);
@@ -344,6 +344,8 @@ var Hermit = class {
             if (config.debug)
               console.timeEnd("hermite_multi");
           }
+          this.workersArchive[core].terminate();
+          delete this.workersArchive[core];
         };
         my_worker.onerror = (err) => reject(err);
         const objData = {
@@ -427,7 +429,7 @@ var Hermit = class {
 var Hermit2 = Hermit;
 var bilinear2 = bilinear;
 var DEFAULT_CONFIG = {
-  argorithm: "bilinear",
+  argorithm: "null",
   processByHalf: true,
   quality: 0.5,
   maxWidth: 800,

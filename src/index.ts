@@ -7,14 +7,14 @@ export const bilinear = _bilinear;
 
 type BrowserImageResizerConfigBase = {
 	/**
-	 * Argorithm to use for downscaling.
+	 * Algorithm used for downscaling
 	 * 
-	 * bilinear: better quality, slower.
-	 * hermite: worse quality, faster. Will dispatch workers for better performance.
-	 * hermite_single: worse quality, faster. Single-threaded.
-	 * null: just resize with drawImage()
+	 * * `null`: Just resize with `drawImage()`. The best quality and fastest.
+	 * * `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
+	 * * `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
+	 * * `hermite_single`: Worse quality, faster. Single-threaded.
 	 * 
-	 * default: bilinear
+	 * default: null
 	 */
 	argorithm: 'bilinear' | 'hermite' | 'hermite_single' | 'null' | null;
 
@@ -55,7 +55,7 @@ export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageRes
 export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
 
 const DEFAULT_CONFIG = {
-	argorithm: 'bilinear',
+	argorithm: 'null',
 	processByHalf: true,
 	quality: 0.5,
 	maxWidth: 800,

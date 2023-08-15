@@ -9,7 +9,6 @@ import { getImageData } from "./scaling_operations";
 
 type WorkerSouceData = {
     source: ImageData;
-    target: boolean;
     startY: number;
     height: number;
 }
@@ -123,7 +122,7 @@ export class Hermit {
                     (globalThis.postMessage as any)(objData, [target.buffer]);
                     if (event.data.debug) {
                         console.timeEnd('work');
-                        console.log('browser-image-resizer: Worker: end', event.data.core, globalThis.performance.measure('measure', 'start', 'end'));
+                        console.log('browser-image-resizer: Worker: end', event.data.core);
                     }
                 };
                 //end worker
@@ -198,7 +197,6 @@ export class Hermit {
 
                 data_part.push({
                     source: ctx.getImageData(0, offset_y, srcCanvas.width, block_height),
-                    target: true,
                     startY: Math.ceil(offset_y / ratio_h),
                     height: current_block_height
                 });
@@ -215,8 +213,6 @@ export class Hermit {
                 my_worker.onmessage = (event: MessageEvent<WorkerResultMessage>) => {
                     workers_in_use--;
                     const core = event.data.core;
-                    this.workersArchive[core].terminate();
-                    delete this.workersArchive[core];
 
                     //draw
                     const height_part = Math.ceil(data_part[core].height / ratio_h);
@@ -229,6 +225,9 @@ export class Hermit {
                         resolve();
                         if (config.debug) console.timeEnd('hermite_multi');
                     }
+
+                    this.workersArchive[core].terminate();
+                    delete this.workersArchive[core];
                 };
                 my_worker.onerror = err => reject(err);
                 const objData: WorkerSouceMessage = {

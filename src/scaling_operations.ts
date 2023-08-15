@@ -4,6 +4,10 @@ import { Hermit } from './hermite';
 
 let hermite: Hermit;
 
+function getTargetHeight(srcHeight: number, scale: number, config: BrowserImageResizerConfig) {
+	return Math.min(Math.floor(srcHeight * scale), config.maxHeight);
+}
+
 function findMaxWidth(config: BrowserImageResizerConfig, canvas: HTMLCanvasElement | OffscreenCanvas) {
 	//Let's find the max available width for scaled image
 	const ratio = canvas.width / canvas.height;
@@ -36,7 +40,7 @@ function findMaxWidth(config: BrowserImageResizerConfig, canvas: HTMLCanvasEleme
 			'browser-image-resizer: scaled image size = ' +
 			mWidth +
 			' px (width) X ' +
-			Math.floor(mWidth / ratio) +
+			getTargetHeight(canvas.height, mWidth / canvas.width, config) +
 			' px (height)'
 		);
 	}
@@ -68,7 +72,7 @@ function prepareHermit() {
 async function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: BrowserImageResizerConfig & { outputWidth: number }) {
 	const scale = config.outputWidth / canvas.width;
 
-	const scaled = new OffscreenCanvas(config.outputWidth, Math.min(Math.floor(canvas.height * scale), config.maxHeight));
+	const scaled = new OffscreenCanvas(config.outputWidth, getTargetHeight(canvas.height, scale, config));
 
 	switch (config.argorithm) {
 		case 'hermite': {

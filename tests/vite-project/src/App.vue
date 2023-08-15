@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import { readAndCompressImage } from "browser-image-resizer";
 import TheWorker from './workers/worker?worker';
 
-const tab = ref(0);
+const tab = ref<number | null>(null);
 const sizeInput = ref<HTMLInputElement>();
 const images = ref<{ comment: string; url: string; }[]>([]);
 const input = ref<HTMLInputElement>();

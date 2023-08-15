@@ -10,13 +10,6 @@ This library allows for cross-browser image downscaling utilizing `OffscreenCanv
 - Safari 16.4 or later is required due to the use of `OffscreenCanvas`.  
   https://caniuse.com/offscreencanvas
 
-<!--
-## Demo
-
-- [Code Sandbox - NPM](https://codesandbox.io/s/6x20vw7l4r)
-- [Code Sandbox - In-Browser](https://codesandbox.io/s/nroxwpn21p)
--->
-
 ## Installation
 
 ### NPM/Yarn/pnpm
@@ -105,12 +98,20 @@ async function convert(file: File) {
 
 | Property Name        | Purpose           | Default Value  |
 | ------------- |-------------| -----:|
-| `argorithm` | 
+| `argorithm` | Algorithm used for downscaling (see below) | 'null' |
+| `processByHalf` | Whether to process downscaling by `drawImage(source, 0, 0, source.width / 2, source.height / 2)` until the size is smaller than twice the target size. | true |
 | `quality`      | The quality of jpeg (or webp) | 0.5 |
 | `maxWidth`      | The maximum width for the downscaled image | 800 |
 | `maxHeight` | The maximum height for the downscaled image | 600 |
 | `debug` | console.log image update operations | false |
 | `mimeType` | specify image output type other than jpeg / If set `null`, function returns OffscreenCanvas  | 'image/jpeg' |
+
+##### `argorithm`
+
+* `null`: Just resize with `drawImage()`. The best quality and fastest.
+* `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
+* `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
+* `hermite_single`: Worse quality, faster. Single-threaded.
 
 ### Outputs
 

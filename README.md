@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This library allows for cross-browser image downscaling and resizing utilizing `OffscreenCanvas`. 
+This library allows for cross-browser image downscaling utilizing `OffscreenCanvas`. 
 
 ## Note
 
@@ -105,7 +105,8 @@ async function convert(file: File) {
 
 | Property Name        | Purpose           | Default Value  |
 | ------------- |-------------| -----:|
-| `quality`      | The quality of the image | 0.5 |
+| `argorithm` | 
+| `quality`      | The quality of jpeg (or webp) | 0.5 |
 | `maxWidth`      | The maximum width for the downscaled image | 800 |
 | `maxHeight` | The maximum height for the downscaled image | 600 |
 | `debug` | console.log image update operations | false |
@@ -113,7 +114,7 @@ async function convert(file: File) {
 
 ### Outputs
 
-A Promise that yields an Image Blob
+A Promise that yields an Image Blob or OffscreenCanvas
 
 ### Output Image Specification
 The output image is derived from `OffscreenCanvas.convertToBlob`.  

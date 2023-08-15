@@ -129,7 +129,8 @@ async function scaleCanvasWithAlgorithm(canvas, config) {
       break;
     }
     default: {
-      throw Error("Unknown algorithm");
+      scaled.getContext("2d")?.drawImage(canvas, 0, 0, scaled.width, scaled.height);
+      break;
     }
   }
   return scaled;
@@ -141,7 +142,7 @@ function getHalfScaleCanvas(src) {
 }
 async function scaleImage({ img, config }) {
   if (config.debug) {
-    console.log("Scale: Started", img);
+    console.log("browser-image-resizer: Scale: Started", img);
   }
   let converting;
   if (img instanceof OffscreenCanvas) {
@@ -152,18 +153,20 @@ async function scaleImage({ img, config }) {
     converting.getContext("2d")?.drawImage(bmp, 0, 0);
   }
   if (!converting?.getContext("2d"))
-    throw Error("Canvas Context is empty.");
+    throw Error("browser-image-resizer: Canvas Context is empty.");
   const maxWidth = findMaxWidth(config, converting);
+  if (!maxWidth)
+    throw Error(`browser-image-resizer: maxWidth is ${maxWidth}!!`);
   if (config.debug)
-    console.log(`Scale: Max width is ${maxWidth}`);
-  while (converting.width >= 2 * maxWidth) {
+    console.log(`browser-image-resizer: scale: maxWidth is ${maxWidth}`);
+  while (config.processByHalf && converting.width >= 2 * maxWidth) {
     if (config.debug)
-      console.log(`Scale: Scaling canvas by half from ${converting.width}`);
+      console.log(`browser-image-resizer: scale: Scaling canvas by half from ${converting.width}`);
     converting = getHalfScaleCanvas(converting);
   }
   if (converting.width > maxWidth) {
     if (config.debug)
-      console.log(`Scale: Scaling canvas by ${config.argorithm} from ${converting.width} to ${maxWidth}`);
+      console.log(`browser-image-resizer: scale: Scaling canvas by ${config.argorithm} from ${converting.width} to ${maxWidth}`);
     converting = await scaleCanvasWithAlgorithm(
       converting,
       Object.assign(config, { outputWidth: maxWidth })
@@ -425,6 +428,7 @@ var Hermit2 = Hermit;
 var bilinear2 = bilinear;
 var DEFAULT_CONFIG = {
   argorithm: "bilinear",
+  processByHalf: true,
   quality: 0.5,
   maxWidth: 800,
   maxHeight: 600,

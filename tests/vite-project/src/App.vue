@@ -53,10 +53,10 @@ async function execCompetition() {
   const files = Array.from(input.value.files);
   console.log(files);
 
-  const argos = new Set(['bilinear', 'hermite', 'hermite_single'] as const);
+  const argos = new Set(['bilinear', 'hermite', 'hermite_single', 'null'] as const);
   for (const argorithm of argos) {
     const start = performance.now();
-    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm: argorithm });
+    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm, processByHalf: true });
     const end = performance.now();
     console.info(`${argorithm}: ${end - start}ms`);
     images.value.push({ comment: argorithm, url: URL.createObjectURL(oc)});

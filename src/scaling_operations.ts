@@ -73,7 +73,7 @@ async function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: Browser
 	switch (config.argorithm) {
 		case 'hermite': {
 			prepareHermit();
-			await hermite.resampleAuto(canvas, scaled, config);
+			await hermite.resampleAuto(canvas, scaled, config as BrowserImageResizerConfig & { argorithm: 'hermite' | 'hermite_single' });
 			break;
 		} case 'hermite_single': {
 			const { srcImgData, destImgData } = getImageData(canvas, scaled);
@@ -87,7 +87,8 @@ async function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: Browser
 			scaled?.getContext('2d')?.putImageData(destImgData, 0, 0);
 			break;
 		} default: {
-			throw Error('Unknown algorithm');
+			scaled.getContext('2d')?.drawImage(canvas, 0, 0, scaled.width, scaled.height);
+			break;
 		}
 	}
 
@@ -109,7 +110,7 @@ export async function scaleImage({ img, config }: {
 	config: BrowserImageResizerConfig;
 }) {
 	if (config.debug) {
-		console.log('Scale: Started', img);
+		console.log('browser-image-resizer: Scale: Started', img);
 	}
 	let converting: OffscreenCanvas;
 
@@ -121,17 +122,20 @@ export async function scaleImage({ img, config }: {
 		converting.getContext('2d')?.drawImage(bmp, 0, 0);
 	}
 
-	if (!converting?.getContext('2d')) throw Error('Canvas Context is empty.');
+	if (!converting?.getContext('2d')) throw Error('browser-image-resizer: Canvas Context is empty.');
 
 	const maxWidth = findMaxWidth(config, converting);
-	if (config.debug) console.log(`Scale: Max width is ${maxWidth}`);
-	while (converting.width >= 2 * maxWidth) {
-		if (config.debug) console.log(`Scale: Scaling canvas by half from ${converting.width}`);
+
+	if (!maxWidth) throw Error(`browser-image-resizer: maxWidth is ${maxWidth}!!`);
+	if (config.debug) console.log(`browser-image-resizer: scale: maxWidth is ${maxWidth}`);
+
+	while (config.processByHalf && converting.width >= 2 * maxWidth) {
+		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by half from ${converting.width}`);
 		converting = getHalfScaleCanvas(converting);
 	}
 
 	if (converting.width > maxWidth) {
-		if (config.debug) console.log(`Scale: Scaling canvas by ${config.argorithm} from ${converting.width} to ${maxWidth}`);
+		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by ${config.argorithm} from ${converting.width} to ${maxWidth}`);
 		converting = await scaleCanvasWithAlgorithm(
 			converting,
 			Object.assign(config, { outputWidth: maxWidth }),

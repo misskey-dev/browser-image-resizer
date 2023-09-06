@@ -1,4 +1,4 @@
-import { readAndCompressImage } from "browser-image-resizer";
+import { readAndCompressImage } from "@misskey-dev/browser-image-resizer";
 
 onmessage = async (e) => {
     console.log('Worker Received Message:', e.data);

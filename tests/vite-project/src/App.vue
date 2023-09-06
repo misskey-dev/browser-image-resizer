@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { readAndCompressImage } from "browser-image-resizer";
+import { readAndCompressImage } from "@misskey-dev/browser-image-resizer";
 import TheWorker from './workers/worker?worker';
 
 const tab = ref<number | null>(null);

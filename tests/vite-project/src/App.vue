@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { readAndCompressImage } from "@misskey-dev/browser-image-resizer";
+import { readAndCompressImage, calculateSize } from "@misskey-dev/browser-image-resizer";
 import TheWorker from './workers/worker?worker';
 
 const tab = ref<number | null>(null);
@@ -39,10 +39,13 @@ async function execMain() {
     worker.postMessage(bmp, [bmp]);
   });
 
-  const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: null });
+  const config = { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: null };
+  const oc = await readAndCompressImage(files[0], config);
   const ctx = canvas.value?.getContext('2d');
   if (!ctx) return;
   ctx.drawImage(oc, 0, 0);
+
+  console.log('Check calculateSize', calculateSize({ width: 2048, height: 1400 }, config));
 }
 
 async function execCompetition() {

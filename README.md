@@ -113,9 +113,14 @@ async function convert(file: File) {
 * `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
 * `hermite_single`: Worse quality, faster. Single-threaded.
 
-### Outputs
+#### Outputs
 
 A Promise that yields an Image Blob or OffscreenCanvas
+
+### `calculateSize(src, config)`
+`calculateSize(src: { width: number; height: number; }, config) => { width: number; height: number; }`
+
+With this function you can get the pre-calculated width and height of the resulting image.
 
 ### Output Image Specification
 The output image is derived from `OffscreenCanvas.convertToBlob`.  

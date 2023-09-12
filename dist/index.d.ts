@@ -45,4 +45,11 @@ export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageRes
 export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
 export declare function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<BrowserImageResizerConfigWithConvertedOutput>): Promise<Blob>;
 export declare function readAndCompressImage(img: ImageBitmapSource | OffscreenCanvas, userConfig: Partial<Omit<BrowserImageResizerConfigWithOffscreenCanvasOutput, 'quality'>>): Promise<OffscreenCanvas>;
+export declare function calculateSize(src: {
+    width: number;
+    height: number;
+}, userConfig: Partial<BrowserImageResizerConfigBase>): {
+    width: number;
+    height: number;
+};
 export {};

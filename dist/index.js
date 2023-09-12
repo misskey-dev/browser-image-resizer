@@ -111,7 +111,7 @@ function prepareHermit() {
 }
 async function scaleCanvasWithAlgorithm(canvas, config) {
   const scale = config.outputWidth / canvas.width;
-  const scaled = new OffscreenCanvas(config.outputWidth, getTargetHeight(canvas.height, scale, config));
+  const scaled = new OffscreenCanvas(Math.floor(config.outputWidth), getTargetHeight(canvas.height, scale, config));
   switch (config.argorithm) {
     case "hermite": {
       prepareHermit();
@@ -441,8 +441,15 @@ async function readAndCompressImage(img, userConfig) {
   const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
   return scaleImage({ img, config });
 }
+function calculateSize(src, userConfig) {
+  const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
+  const width = findMaxWidth(config, src);
+  const height = getTargetHeight(src.height, width / src.width, config);
+  return { width: Math.floor(width), height };
+}
 export {
   Hermit2 as Hermit,
   bilinear2 as bilinear,
+  calculateSize,
   readAndCompressImage
 };

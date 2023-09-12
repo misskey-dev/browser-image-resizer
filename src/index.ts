@@ -1,6 +1,6 @@
 import { Hermit as _Hermite } from './hermite';
 import { bilinear as _bilinear } from './bilinear';
-import { scaleImage } from './scaling_operations';
+import { findMaxWidth, getTargetHeight, scaleImage } from './scaling_operations';
 
 export const Hermit = _Hermite;
 export const bilinear = _bilinear;
@@ -72,4 +72,11 @@ export async function readAndCompressImage(
 ) {
 	const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
 	return scaleImage({ img, config });
+}
+
+export function calculateSize(src: { width: number; height: number }, userConfig: Partial<BrowserImageResizerConfigBase>) {
+	const config = Object.assign({}, DEFAULT_CONFIG, userConfig);
+	const width = findMaxWidth(config, src);
+	const height = getTargetHeight(src.height, width / src.width, config);
+	return { width: Math.floor(width), height };
 }

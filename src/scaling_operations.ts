@@ -141,8 +141,8 @@ export async function scaleImage({ img, config }: {
 		 * 強制的に縮小する
 		 * Ref.: https://github.com/misskey-dev/browser-image-resizer/issues/6
 		 */
-		if (isIos() && bmp.width * bmp.height > 167777216) {
-			const scale = Math.sqrt(167777216 / (bmp.width * bmp.height));
+		if (isIos() && bmp.width * bmp.height > 16777216) {
+			const scale = Math.sqrt(16777216 / (bmp.width * bmp.height));
 			if (config.debug) console.log(`browser-image-resizer: scale: Image is too large in iOS WebKit}`);
 			converting = new OffscreenCanvas(Math.floor(bmp.width * scale), Math.floor(bmp.height * scale));
 			converting.getContext('2d')?.drawImage(bmp, 0, 0, converting.width, converting.height);

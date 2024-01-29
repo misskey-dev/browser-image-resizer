@@ -4,6 +4,12 @@ import { Hermit } from './hermite';
 
 let hermite: Hermit;
 
+function isIos() {
+	if (typeof navigator === 'undefined') return false;
+	if (!navigator.userAgent) return false;
+	return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
 export function getTargetHeight(srcHeight: number, scale: number, config: BrowserImageResizerConfig) {
 	return Math.min(Math.floor(srcHeight * scale), config.maxHeight);
 }
@@ -28,6 +34,8 @@ export function findMaxWidth(config: BrowserImageResizerConfig, canvas: { width:
 	if (!!config.scaleRatio)
 		mWidth = Math.min(mWidth, Math.floor(config.scaleRatio * canvas.width));
 
+	const rHeight = getTargetHeight(canvas.height, mWidth / canvas.width, config);
+
 	if (config.debug) {
 		console.log(
 			'browser-image-resizer: original image size = ' +
@@ -40,13 +48,18 @@ export function findMaxWidth(config: BrowserImageResizerConfig, canvas: { width:
 			'browser-image-resizer: scaled image size = ' +
 			mWidth +
 			' px (width) X ' +
-			getTargetHeight(canvas.height, mWidth / canvas.width, config) +
+			rHeight +
 			' px (height)'
 		);
 	}
 	if (mWidth <= 0) {
 		mWidth = 1;
 		console.warn("browser-image-resizer: image size is too small");
+	}
+
+	if (isIos() && mWidth * rHeight > 167777216) {
+		console.error("browser-image-resizer: image size is too large for iOS WebKit.", mWidth, rHeight);
+		throw new Error("browser-image-resizer: image size is too large for iOS WebKit.");
 	}
 
 	return mWidth;
@@ -122,8 +135,21 @@ export async function scaleImage({ img, config }: {
 		converting = img;
 	} else {
 		const bmp = await createImageBitmap(img);
-		converting = new OffscreenCanvas(bmp.width, bmp.height);
-		converting.getContext('2d')?.drawImage(bmp, 0, 0);
+
+		/**
+		 * iOS WebKitではOffscreenCanvasの最大サイズが特に厳しいため、
+		 * 強制的に縮小する
+		 * Ref.: https://github.com/misskey-dev/browser-image-resizer/issues/6
+		 */
+		if (isIos() && bmp.width * bmp.height > 167777216) {
+			const scale = Math.sqrt(167777216 / (bmp.width * bmp.height));
+			if (config.debug) console.log(`browser-image-resizer: scale: Image is too large in iOS WebKit}`);
+			converting = new OffscreenCanvas(Math.floor(bmp.width * scale), Math.floor(bmp.height * scale));
+			converting.getContext('2d')?.drawImage(bmp, 0, 0, converting.width, converting.height);
+		} else {
+			converting = new OffscreenCanvas(bmp.width, bmp.height);
+			converting.getContext('2d')?.drawImage(bmp, 0, 0);
+		}
 	}
 
 	if (!converting?.getContext('2d')) throw Error('browser-image-resizer: Canvas Context is empty.');

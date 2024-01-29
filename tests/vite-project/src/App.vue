@@ -39,7 +39,7 @@ async function execMain() {
     worker.postMessage(bmp, [bmp]);
   });
 
-  const config = { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: null };
+  const config = { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: null, processByHalf: false };
   const oc = await readAndCompressImage(files[0], config);
   const ctx = canvas.value?.getContext('2d');
   if (!ctx) return;
@@ -59,10 +59,18 @@ async function execCompetition() {
   const argos = new Set(['bilinear', 'hermite', 'hermite_single', 'null'] as const);
   for (const argorithm of argos) {
     const start = performance.now();
+    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm, processByHalf: false });
+    const end = performance.now();
+    console.info(`${argorithm} direct: ${end - start}ms`);
+    images.value.push({ comment: `${argorithm} direct`, url: URL.createObjectURL(oc)});
+  }
+
+  for (const argorithm of argos) {
+    const start = performance.now();
     const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm, processByHalf: true });
     const end = performance.now();
-    console.info(`${argorithm}: ${end - start}ms`);
-    images.value.push({ comment: argorithm, url: URL.createObjectURL(oc)});
+    console.info(`${argorithm} half: ${end - start}ms`);
+    images.value.push({ comment: `${argorithm} half`, url: URL.createObjectURL(oc)});
   }
 }
 

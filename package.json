@@ -12,7 +12,7 @@
   ],
   "devDependencies": {
     "esbuild": "^0.18.20",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "scripts": {
     "build": "NODE_ENV=production node build.js && tsc --project tsconfig.build.json",

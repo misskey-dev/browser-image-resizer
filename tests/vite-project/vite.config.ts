@@ -14,5 +14,8 @@ export default defineConfig({
     alias: {
       '_/': _dirname + '/src/assets/',
     }
-  }
+  },
+  build: {
+    minify: false,
+  },
 })

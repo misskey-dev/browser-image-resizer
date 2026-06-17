@@ -108,7 +108,7 @@ async function convert(file: File) {
 
 ##### `argorithm`
 
-* `null`: Just resize with `drawImage()`. The best quality and fastest.
+* `null`: Just resize with `drawImage()`. The fastest but lowest quality.
 * `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
 * `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
 * `hermite_single`: Worse quality, faster. Single-threaded.

@@ -23,12 +23,12 @@ This library allows for cross-browser image downscaling utilizing `OffscreenCanv
 ### In the main thread
 
 ```typescript
-import { readAndCompressImage } from 'browser-image-resizer';
+import { readAndCompressImage } from '@misskey-dev/browser-image-resizer';
 
 const config = {
   quality: 0.7,
-  width: 800,
-  height: 600
+  maxWidth: 800,
+  maxHeight: 600
 };
 
 // Note: A single file comes from event.target.files on <input>

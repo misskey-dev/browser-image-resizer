@@ -87,10 +87,10 @@ async function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: Browser
 
 	const scaled = new OffscreenCanvas(Math.floor(config.outputWidth), getTargetHeight(canvas.height, scale, config));
 
-	switch (config.argorithm) {
+	switch (config.algorithm) {
 		case 'hermite': {
 			prepareHermit();
-			await hermite.resampleAuto(canvas, scaled, config as BrowserImageResizerConfig & { argorithm: 'hermite' | 'hermite_single' });
+			await hermite.resampleAuto(canvas, scaled, config as BrowserImageResizerConfig & { algorithm: 'hermite' | 'hermite_single' });
 			break;
 		} case 'hermite_single': {
 			const { srcImgData, destImgData } = getImageData(canvas, scaled);
@@ -165,7 +165,7 @@ export async function scaleImage({ img, config }: {
 	}
 
 	if (converting.width > maxWidth) {
-		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by ${config.argorithm} from ${converting.width} to ${maxWidth}`);
+		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by ${config.algorithm} from ${converting.width} to ${maxWidth}`);
 		converting = await scaleCanvasWithAlgorithm(
 			converting,
 			Object.assign(config, { outputWidth: maxWidth }),

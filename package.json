@@ -1,6 +1,6 @@
 {
 	"name": "@misskey-dev/browser-image-resizer",
-	"version": "2026.6.0-beta.0",
+	"version": "2026.6.0-beta.1",
 	"description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
 	"type": "module",
 	"main": "dist/index.js",

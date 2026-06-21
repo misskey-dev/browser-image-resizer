@@ -24,8 +24,10 @@ This library allows for cross-browser image downscaling utilizing `OffscreenCanv
 
 ```typescript
 import { readAndCompressImage } from '@misskey-dev/browser-image-resizer';
+import { bilinear } from '@misskey-dev/browser-image-resizer/algorithms/bilinear';
 
 const config = {
+  algorithm: bilinear,
   quality: 0.7,
   maxWidth: 800,
   maxHeight: 600
@@ -98,7 +100,7 @@ async function convert(file: File) {
 
 | Property Name        | Purpose           | Default Value  |
 | ------------- |-------------| -----:|
-| `algorithm` | Algorithm used for downscaling (see below) | 'null' |
+| `algorithm` | Algorithm used for downscaling (see below) | null |
 | `processByHalf` | Whether to process downscaling by `drawImage(source, 0, 0, source.width / 2, source.height / 2)` until the size is smaller than twice the target size. | true |
 | `quality`      | The quality of jpeg (or webp) | 0.5 |
 | `maxWidth`      | The maximum width for the downscaled image | 800 |
@@ -109,9 +111,22 @@ async function convert(file: File) {
 ##### `algorithm`
 
 * `null`: Just resize with `drawImage()`. The best quality and fastest.
-* `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
-* `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
-* `hermite_single`: Worse quality, faster. Single-threaded.
+* `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer). Import from `@misskey-dev/browser-image-resizer/algorithms/bilinear`
+* `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance. Import from `@misskey-dev/browser-image-resizer/algorithms/hermite`
+* `hermite_single`:  Worse quality, faster. Single-threaded. Import from `@misskey-dev/browser-image-resizer/algorithms/hermite_single`
+
+You can also implement your own algorithm by using `defineImageResizingAlgorithm` and passing it to the `algorithm` property.
+
+```ts
+import { defineImageResizingAlgorithm } from '@misskey-dev/browser-image-resizer';
+
+const myAlgorithm = defineImageResizingAlgorithm({
+  name: 'my-algorithm',
+  resize: async (source, target, config) => {
+    // Implement your own algorithm here
+  }
+});
+```
 
 #### Outputs
 

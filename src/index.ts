@@ -1,22 +1,19 @@
-import { Hermit as _Hermite } from './hermite';
-import { bilinear as _bilinear } from './bilinear';
-import { findMaxWidth, getTargetHeight, scaleImage } from './scaling_operations';
+import type { ImageResizingAlgorithm } from '@/image_resizing_algorithm.js';
+import { findMaxWidth, getTargetHeight, scaleImage } from '@/scaling_operations.js';
 
-export const Hermit = _Hermite;
-export const bilinear = _bilinear;
+export { defineImageResizingAlgorithm } from '@/image_resizing_algorithm.js';
+export type { ImageResizingAlgorithm, ImageResizingAlgorithmContext } from '@/image_resizing_algorithm.js';
 
 type BrowserImageResizerConfigBase = {
 	/**
 	 * Algorithm used for downscaling
 	 * 
 	 * * `null`: Just resize with `drawImage()`. The best quality and fastest.
-	 * * `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
-	 * * `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
-	 * * `hermite_single`: Worse quality, faster. Single-threaded.
+	 * * imported algorithm object: Use one of the exports under `algorithms/*`.
 	 * 
 	 * default: null
 	 */
-	algorithm: 'bilinear' | 'hermite' | 'hermite_single' | 'null' | null;
+	algorithm: ImageResizingAlgorithm | null;
 
 	/**
 	 * Whether to process downscaling by `drawImage(source, 0, 0, source.width / 2, source.height / 2)`
@@ -55,7 +52,7 @@ export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageRes
 export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
 
 const DEFAULT_CONFIG = {
-	algorithm: 'null',
+	algorithm: null,
 	processByHalf: true,
 	quality: 0.5,
 	maxWidth: 800,

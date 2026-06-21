@@ -5,6 +5,17 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./algorithms/*": {
+      "types": "./dist/algorithms/*.d.ts",
+      "import": "./dist/algorithms/*.js"
+    }
+  },
   "author": "Eric Nograles <grales@gmail.com>",
   "license": "MIT",
   "packageManager": "pnpm@11.8.0",

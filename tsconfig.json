@@ -11,7 +11,7 @@
 		"sourceMap": false,
 		"target": "es2020",
 		"module": "esnext",
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"removeComments": false,
 		"noLib": false,
 		"strict": true,
@@ -19,19 +19,13 @@
 		"experimentalDecorators": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
 		},
-		"typeRoots": [
-			"node_modules/@types",
-			"@types",
-		],
 		"lib": [
 			"esnext",
 			"dom"
 		],
-		"outDir": "./dist"
 	},
 	"compileOnSave": false,
 	"include": [

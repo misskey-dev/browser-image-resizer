@@ -2,22 +2,26 @@
   "name": "@misskey-dev/browser-image-resizer",
   "version": "2024.1.0",
   "description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Eric Nograles <grales@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@8.6.12",
+  "packageManager": "pnpm@11.8.0",
   "files": [
     "dist"
   ],
   "devDependencies": {
-    "esbuild": "^0.18.20",
-    "typescript": "^5.3.3"
+    "tsdown": "^0.22.3",
+    "typescript": "^6.0.3"
   },
   "scripts": {
-    "build": "NODE_ENV=production node build.js && tsc --project tsconfig.build.json",
-    "dev": "node build.js watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "test": "cd tests/vite-project && pnpm run dev"
   },
-  "repository": "https://github.com/misskey-dev/browser-image-resizer.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/misskey-dev/browser-image-resizer.git"
+  }
 }

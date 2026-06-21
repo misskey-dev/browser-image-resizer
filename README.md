@@ -98,7 +98,7 @@ async function convert(file: File) {
 
 | Property Name        | Purpose           | Default Value  |
 | ------------- |-------------| -----:|
-| `argorithm` | Algorithm used for downscaling (see below) | 'null' |
+| `algorithm` | Algorithm used for downscaling (see below) | 'null' |
 | `processByHalf` | Whether to process downscaling by `drawImage(source, 0, 0, source.width / 2, source.height / 2)` until the size is smaller than twice the target size. | true |
 | `quality`      | The quality of jpeg (or webp) | 0.5 |
 | `maxWidth`      | The maximum width for the downscaled image | 800 |
@@ -106,7 +106,7 @@ async function convert(file: File) {
 | `debug` | console.log image update operations | false |
 | `mimeType` | specify image output type other than jpeg / If set `null`, function returns OffscreenCanvas  | 'image/jpeg' |
 
-##### `argorithm`
+##### `algorithm`
 
 * `null`: Just resize with `drawImage()`. The best quality and fastest.
 * `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).

@@ -16,7 +16,7 @@ type BrowserImageResizerConfigBase = {
 	 * 
 	 * default: null
 	 */
-	argorithm: 'bilinear' | 'hermite' | 'hermite_single' | 'null' | null;
+	algorithm: 'bilinear' | 'hermite' | 'hermite_single' | 'null' | null;
 
 	/**
 	 * Whether to process downscaling by `drawImage(source, 0, 0, source.width / 2, source.height / 2)`
@@ -55,7 +55,7 @@ export type BrowserImageResizerConfigWithOffscreenCanvasOutput = BrowserImageRes
 export type BrowserImageResizerConfig = BrowserImageResizerConfigWithConvertedOutput | BrowserImageResizerConfigWithOffscreenCanvasOutput;
 
 const DEFAULT_CONFIG = {
-	argorithm: 'null',
+	algorithm: 'null',
 	processByHalf: true,
 	quality: 0.5,
 	maxWidth: 800,

@@ -1,27 +1,27 @@
 {
-  "name": "@misskey-dev/browser-image-resizer",
-  "version": "2024.1.0",
-  "description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "author": "Eric Nograles <grales@gmail.com>",
-  "license": "MIT",
-  "packageManager": "pnpm@11.8.0",
-  "files": [
-    "dist"
-  ],
-  "devDependencies": {
-    "tsdown": "^0.22.3",
-    "typescript": "^6.0.3"
-  },
-  "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "test": "cd tests/vite-project && pnpm run dev"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/misskey-dev/browser-image-resizer.git"
-  }
+	"name": "@misskey-dev/browser-image-resizer",
+	"version": "2026.6.0-beta.0",
+	"description": "A browser-based utility to downscale and resize images using OffscreenCanvas",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"author": "Eric Nograles <grales@gmail.com>",
+	"license": "MIT",
+	"packageManager": "pnpm@11.8.0",
+	"files": [
+		"dist"
+	],
+	"devDependencies": {
+		"tsdown": "^0.22.3",
+		"typescript": "^6.0.3"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "cd tests/vite-project && pnpm run dev"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/misskey-dev/browser-image-resizer.git"
+	}
 }

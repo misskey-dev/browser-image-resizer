@@ -1,8 +1,4 @@
-import { BrowserImageResizerConfig } from '.';
-import { bilinear } from './bilinear';
-import { Hermit } from './hermite';
-
-let hermite: Hermit;
+import type { BrowserImageResizerConfig } from '@/index.js';
 
 function isIos() {
 	if (typeof navigator === 'undefined') return false;
@@ -65,48 +61,20 @@ export function findMaxWidth(config: BrowserImageResizerConfig, canvas: { width:
 	return mWidth;
 }
 
-export function getImageData(canvas: OffscreenCanvas, scaled: OffscreenCanvas) {
-	const srcImgData = canvas
-		?.getContext('2d')
-		?.getImageData(0, 0, canvas.width, canvas.height);
-	const destImgData = scaled
-		?.getContext('2d')
-		?.createImageData(scaled.width, scaled.height);
-
-	if (!srcImgData || !destImgData) throw Error('Canvas is empty (scaleCanvasWithAlgorithm). You should run this script after the document is ready.');
-
-	return { srcImgData, destImgData };
-}
-
-function prepareHermit() {
-	if (!hermite) hermite = new Hermit();
-}
-
 async function scaleCanvasWithAlgorithm(canvas: OffscreenCanvas, config: BrowserImageResizerConfig & { outputWidth: number }) {
 	const scale = config.outputWidth / canvas.width;
 
 	const scaled = new OffscreenCanvas(Math.floor(config.outputWidth), getTargetHeight(canvas.height, scale, config));
 
-	switch (config.algorithm) {
-		case 'hermite': {
-			prepareHermit();
-			await hermite.resampleAuto(canvas, scaled, config as BrowserImageResizerConfig & { algorithm: 'hermite' | 'hermite_single' });
-			break;
-		} case 'hermite_single': {
-			const { srcImgData, destImgData } = getImageData(canvas, scaled);
-			prepareHermit();
-			hermite.resampleSingle(srcImgData, destImgData, config);
-			scaled?.getContext('2d')?.putImageData(destImgData, 0, 0);
-			break;
-		} case 'bilinear': {
-			const { srcImgData, destImgData } = getImageData(canvas, scaled);
-			bilinear(srcImgData, destImgData, scale);
-			scaled?.getContext('2d')?.putImageData(destImgData, 0, 0);
-			break;
-		} default: {
-			scaled.getContext('2d')?.drawImage(canvas, 0, 0, scaled.width, scaled.height);
-			break;
-		}
+	if (config.algorithm) {
+		await config.algorithm.resize({
+			source: canvas,
+			destination: scaled,
+			scale,
+			debug: config.debug,
+		});
+	} else {
+		scaled.getContext('2d')?.drawImage(canvas, 0, 0, scaled.width, scaled.height);
 	}
 
 	return scaled;
@@ -165,7 +133,7 @@ export async function scaleImage({ img, config }: {
 	}
 
 	if (converting.width > maxWidth) {
-		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by ${config.algorithm} from ${converting.width} to ${maxWidth}`);
+		if (config.debug) console.log(`browser-image-resizer: scale: Scaling canvas by ${config.algorithm?.name ?? 'drawImage'} from ${converting.width} to ${maxWidth}`);
 		converting = await scaleCanvasWithAlgorithm(
 			converting,
 			Object.assign(config, { outputWidth: maxWidth }),

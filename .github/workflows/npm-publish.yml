@@ -13,20 +13,20 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v6
         with:
-          version: 8
           run_install: false
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Publish package
         run: |
           corepack enable
           pnpm i --frozen-lockfile
           pnpm build
           pnpm publish --access public --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

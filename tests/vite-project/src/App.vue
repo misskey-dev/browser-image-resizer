@@ -56,21 +56,21 @@ async function execCompetition() {
   const files = Array.from(input.value.files);
   console.log(files);
 
-  const argos = new Set(['bilinear', 'hermite', 'hermite_single', 'null'] as const);
-  for (const argorithm of argos) {
+  const algos = new Set(['bilinear', 'hermite', 'hermite_single', 'null'] as const);
+  for (const algorithm of algos) {
     const start = performance.now();
-    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm, processByHalf: false });
+    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', algorithm, processByHalf: false });
     const end = performance.now();
-    console.info(`${argorithm} direct: ${end - start}ms`);
-    images.value.push({ comment: `${argorithm} direct`, url: URL.createObjectURL(oc)});
+    console.info(`${algorithm} direct: ${end - start}ms`);
+    images.value.push({ comment: `${algorithm} direct`, url: URL.createObjectURL(oc)});
   }
 
-  for (const argorithm of argos) {
+  for (const algorithm of algos) {
     const start = performance.now();
-    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', argorithm, processByHalf: true });
+    const oc = await readAndCompressImage(files[0], { debug: true, maxWidth: size.value, maxHeight: size.value, mimeType: 'image/png', algorithm, processByHalf: true });
     const end = performance.now();
-    console.info(`${argorithm} half: ${end - start}ms`);
-    images.value.push({ comment: `${argorithm} half`, url: URL.createObjectURL(oc)});
+    console.info(`${algorithm} half: ${end - start}ms`);
+    images.value.push({ comment: `${algorithm} half`, url: URL.createObjectURL(oc)});
   }
 }
 

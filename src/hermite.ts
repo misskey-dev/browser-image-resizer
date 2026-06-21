@@ -6,6 +6,7 @@
  */
 
 import { getImageData } from "./scaling_operations";
+import type { BrowserImageResizerConfig } from "./index";
 
 type WorkerSouceData = {
     source: ImageData;
@@ -133,8 +134,8 @@ export class Hermit {
     /**
      * Hermite resize. Detect cpu count and use best option for user.
      */
-    public resampleAuto(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: { debug?: boolean, argorithm?: string }) {
-        if (!!globalThis.Worker && this.cores > 1 && config?.argorithm !== 'hermite_single') {
+    public resampleAuto(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: BrowserImageResizerConfig & { algorithm: 'hermite' | 'hermite_single' }) {
+        if (!!globalThis.Worker && this.cores > 1 && config?.algorithm !== 'hermite_single') {
             //workers supported and we have at least 2 cpu cores - using multithreading
             return this.resample(srcCanvas, destCanvas, config);
         } else {
@@ -149,7 +150,7 @@ export class Hermit {
     /**
      * Hermite resize, multicore version - fast image resize/resample using Hermite filter.
      */
-    async resample(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: { debug?: boolean }) {
+    async resample(srcCanvas: OffscreenCanvas, destCanvas: OffscreenCanvas, config: BrowserImageResizerConfig & { algorithm: 'hermite' | 'hermite_single' }) {
         return new Promise<void>((resolve, reject) => {
             if (config.debug) console.time('hermite_multi');
 

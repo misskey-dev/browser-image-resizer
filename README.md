@@ -108,7 +108,7 @@ async function convert(file: File) {
 
 ##### `algorithm`
 
-* `null`: Just resize with `drawImage()`. The best quality and fastest.
+* `null`: Performs downscaling of the image via canvas `drawImage()`. This means you are delegating the downscaling process to the browser, which is usually the fastest option, although results may vary depending on the browser's implementation.
 * `bilinear`: Better quality, slower. Comes from upstream (ericnogralesbrowser-image-resizer).
 * `hermite`: Worse quality, faster. Comes from [viliusle/Hermite-resize](https://github.com/viliusle/Hermite-resize). Will dispatch workers for better performance.
 * `hermite_single`: Worse quality, faster. Single-threaded.

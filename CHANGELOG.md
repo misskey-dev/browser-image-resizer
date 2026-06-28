@@ -1,4 +1,4 @@
-## Unreleased
+## 2026.6.0
 * **Breaking Change:** `argorithm` オプションは `algorithm` に名前が変更されました。
 * 依存関係の更新
 
